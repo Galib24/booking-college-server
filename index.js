@@ -14,7 +14,7 @@ app.use(express.json());
 
 
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.z8yqdyj.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -46,6 +46,7 @@ const dataCollection = client.db('collegeDb').collection('collegeData')
 const researchCollection = client.db('collegeDb').collection('research')
 const reviewCollection = client.db('collegeDb').collection('reviews')
 const userCollection = client.db('collegeDb').collection('userInfo')
+const loginUserCollection = client.db('collegeDb').collection('loginUser')
 
 // College data
 
@@ -67,12 +68,57 @@ app.get('/reviews', async (req, res) => {
 
 
 // create data from user
-app.post('/userInfo',async(req, res)=>{
+app.post('/userInfo', async (req, res) => {
     const newUser = req.body;
-    console.log(newUser);
+    // console.log(newUser);
     const result = await userCollection.insertOne(newUser);
     res.send(result);
 })
+
+// get selected according info of user
+app.get('/userInfo', async (req, res) => {
+    const email = req.query?.email;
+    if (!email) {
+        res.send([])
+    }
+    const query = { email: email };
+    const result = await userCollection.find(query).toArray();
+    res.send(result);
+})
+
+
+
+// create users reviews
+app.post('/reviews', async (req, res) => {
+    const newUser = req.body;
+    console.log(newUser);
+    const result = await reviewCollection.insertOne(newUser);
+    res.send(result);
+})
+
+
+// login user
+app.post('/loginUser', async (req, res) => {
+    const newUser = req.body;
+    const query = { email: newUser?.email };
+    const existingUser = await userCollection.findOne(query);
+
+    if (existingUser) {
+        return res.send({ message: 'user already exist' })
+    }
+    console.log(newUser);
+    const result = await loginUserCollection.insertOne(newUser);
+    res.send(result);
+})
+
+// get login user
+
+app.get('/loginUser', async (req, res) => {
+    const result = await loginUserCollection.find().toArray();
+    res.send(result);
+})
+
+
 
 
 
